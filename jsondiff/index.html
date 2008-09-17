@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>JSON Diff</title>
+	<link rel="stylesheet" href="master.css" type="text/css" media="screen" title="no title" charset="utf-8">
+	<style type="text/css" media="screen">
+
+	</style>
+	<script type="text/javascript" charset="utf-8">
+		var jsonBoxA, jsonBoxB;
+		
+		function init()
+		{
+			document.addEventListener("click", clickHandler, false);
+			
+			jsonBoxA = document.getElementById("jsonA");
+			jsonBoxB = document.getElementById("jsonB");
+			
+			startCompare();
+		}
+	
+		function swapBoxes()
+		{
+			var tmp = jsonBoxA.value;
+			jsonBoxA.value = jsonBoxB.value;
+			jsonBoxB.value = tmp;
+		}
+		
+		function clearBoxes()
+		{
+			jsonBoxA.value = "";
+			jsonBoxB.value = "";
+		}
+	
+		function startCompare()
+		{
+			var objA, objB;
+			
+			jsonBoxA.style.backgroundColor = "";
+			jsonBoxB.style.backgroundColor = "";
+			
+			try { objA = eval("("+jsonBoxA.value+")"); } catch(e) { jsonBoxA.style.backgroundColor = "rgba(255,0,0,0.5)"; }
+			try { objB = eval("("+jsonBoxB.value+")"); } catch(e) { jsonBoxB.style.backgroundColor = "rgba(255,0,0,0.5)"; }
+			
+			results = document.getElementById("results");
+			while (results.firstChild)
+				results.removeChild(results.firstChild);
+				
+			compareTree(objA, objB, "root", results);
+		}
+		
+		function compareTree(a, b, name, results)
+		{
+			var typeA = typeofReal(a);
+			var typeB = typeofReal(b);
+			
+			var typeSpanA = document.createElement("span");
+			typeSpanA.appendChild(document.createTextNode("("+typeA+")"))
+			typeSpanA.setAttribute("class", "typeName");
+
+			var typeSpanB = document.createElement("span");
+			typeSpanB.appendChild(document.createTextNode("("+typeB+")"))
+			typeSpanB.setAttribute("class", "typeName");
+			
+			var aString = (typeA === "object" || typeA === "array") ? "" : String(a) + " ";
+			var bString = (typeB === "object" || typeB === "array") ? "" : String(b) + " ";
+			
+			var leafNode = document.createElement("span");
+			leafNode.appendChild(document.createTextNode(name));
+			if (a === undefined)
+			{
+				leafNode.setAttribute("class", "added");
+				leafNode.appendChild(document.createTextNode(": " + bString));
+				leafNode.appendChild(typeSpanB);
+			}
+			else if (b === undefined)
+			{
+				leafNode.setAttribute("class", "removed");
+				leafNode.appendChild(document.createTextNode(": " + aString));
+				leafNode.appendChild(typeSpanA);
+			}
+			else if (typeA !== typeB || (typeA !== "object" && typeA !== "array" && a !== b))
+			{
+				leafNode.setAttribute("class", "changed");
+				leafNode.appendChild(document.createTextNode(": " + aString));
+				leafNode.appendChild(typeSpanA);
+				leafNode.appendChild(document.createTextNode(" => "+ bString));
+				leafNode.appendChild(typeSpanB);
+			}
+			else
+			{
+				leafNode.appendChild(document.createTextNode(": " + aString));
+				leafNode.appendChild(typeSpanA);
+			}
+			
+			if (typeA === "object" || typeA === "array" || typeB === "object" || typeB === "array")
+			{
+				var keys = [];
+				for (var i in a) keys.push(i);				
+				for (var i in b) keys.push(i);
+				keys.sort();
+				
+				var listNode = document.createElement("ul");
+				listNode.appendChild(leafNode);
+				
+				for (var i = 0; i < keys.length; i++)
+				{
+					if (keys[i] === keys[i-1])
+						continue;
+						
+					var li = document.createElement("li");
+					listNode.appendChild(li);
+					
+					compareTree(a && a[keys[i]], b && b[keys[i]], keys[i], li);
+				}
+				
+				results.appendChild(listNode);
+			}	
+			else
+			{
+				results.appendChild(leafNode);
+			}
+			
+			
+		}
+		
+		function isArray(value) { return value && typeof value === "object" && value.constructor === Array; }
+		function typeofReal(value) { return isArray(value) ? "array" : typeof value; }
+		
+		function clickHandler(e)
+		{
+			var e = e || window.event;
+			if(e.target.nodeName.toUpperCase() === "UL")
+			{
+				if (e.target.getAttribute("closed") === "yes")
+					e.target.setAttribute("closed", "no");
+				else
+					e.target.setAttribute("closed", "yes");
+			}
+		}
+	</script>
+</head>
+<body onload="init();">
+	<h2>JSON Diff</h2>
+	<div class="contentbox" id="instructions">
+		<h3>Instructions</h3>
+		<ul>
+			<li>Paste some JSON in each of the text fields. Click "Compare" to see the diff.</li>
+			<li>Changed portions are displayed in <span class="changed">yellow</span>. Additions are displayed in <span class="added">green</span>. Deletions are displayed in <span class="removed">red</span>.</li>
+			<li>It also works as a JSON viewer. Click the disclosure triangles to display/hide portions of the JSON.</li>
+			<li>Invalid JSON is indicated by the text fields turning red.</li>
+			<li>Swap the contents of the text areas by clicking "Swap". Clear them by clicking "Clear".</li>
+		</ul>
+	</div>
+	<div class="contentbox" id="inputs">
+		<textarea id="jsonA">{"format":"example","content":[{"align":"center","depth":0,"list":false,"content":[{"style":{"underline":1,"bold":2,"size":20,"italic":2,"color":"FFFFFF","fontFamily":"Arial"},"content":"And please, feel free to send us your feedback and comments to "},{"style":{"underline":1,"bold":2,"size":20,"italic":2,"color":"4DC3FF","fontFamily":"Arial"},"content":"hello world"},{"style":{"underline":1,"bold":2,"size":20,"italic":2,"color":"FFFFFF","fontFamily":"Arial"},"content":", or just by clicking on the "},{"style":{"underline":1,"bold":2,"size":20,"italic":2,"color":"4DC3FF","fontFamily":"Arial"},"content":"feedback"}],"ordered":false}],"version":3}</textarea>
+		<textarea id="jsonB">{"format":"example","version":3.1,"content":[{"list":false,"depth":0,"ordered":false,"content":[{"content":"And please, feel free to send us your feedback and comments to ","style":{"size":20,"color":"FFFFFF","name":"Arial","bold":2,"italic":2,"underline":2}},{"content":"foo","style":{"size":20,"color":"4DC2FF","name":"Arial","bold":2,"italic":2,"underline":2}},{"content":", or just by clicking on the ","style":{"size":20,"color":"FFFFFF","name":"Arial","bold":2,"italic":2,"underline":2}},{"content":"feedback","style":{"size":20,"color":"4DC2FF","name":"Arial","bold":2,"italic":2,"underline":2}},{"content":" button up above.","style":{"size":20,"color":"FFFFFF","name":"Arial","bold":2,"italic":2,"underline":2}}],"align":"center"}]}</textarea>
+			<input type="button" value="Compare" id="compare" onclick="startCompare();" />
+			<input type="button" value="Swap" id="swap" onclick="swapBoxes();"/>
+			<input type="button" value="Clear" id="clear" onclick="clearBoxes();"/>
+	</div>
+	<div class="contentbox" id="results">
+	</div>
+	<div class="contentbox" id="issues">
+		<h3>About</h3>
+		<p>JSON Diff is a simple way to visualize and compare <a href="http://json.org">JSON</a>.</p>
+		<h3>Known Issues</h3>
+		<ul>
+			<li>Diff algorithm not very intelligent when dealing with arrays</li>
+			<li>Probably doesn't work in IE</li>
+		</ul>
+	</div>
+</body>
+</html>
