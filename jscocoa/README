@@ -1,0 +1,31 @@
+"jscocoa" is a simple command line interface to JSCocoa:
+
+- http://inexdo.com/JSCocoa
+- http://code.google.com/p/jscocoa/
+
+1) Create a new command line tool project in Xcode
+2) Replace the main file with jscocoa.m
+
+Perform the steps listed here: http://code.google.com/p/jscocoa/wiki/QuickStart
+
+3) Add JavascriptCore.framework to frameworks
+4) In 'Build' project settings, add -lffi to 'Other linker flags'
+5) Copy (or reference) all the files from the JSCocoa folder in your project.
+
+Only the following are really necessary:
+
+	JSCocoaPrivateObject.m
+	JSCocoaController.h
+	JSCocoaController.m
+	JSCocoaFFIArgument.h
+	JSCocoaFFIArgument.m
+	JSCocoaFFIClosure.h
+	JSCocoaFFIClosure.m
+	JSCocoaHelper.h
+	JSCocoaHelper.m
+	JSCocoaPrivateObject.h
+	BridgeSupportController.m
+	BridgeSupportController.h
+	
+
+jscore-bridge.m is very incomplete and obsoleted by JSCocoa.
