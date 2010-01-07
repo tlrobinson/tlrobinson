@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+require 'nokogiri'
+require 'open-uri'
+
+if ARGV.empty?
+  #exit 1
+  ARGV[0] = "gtfo"
+end
+
+BOARDS = ['b']
+REGEX = Regexp.new(ARGV.join("|"), Regexp::IGNORECASE)
+DELAY = 5
+
+puts "Watching boards #{BOARDS.join(', ')} for pattern #{REGEX.inspect} with delay #{DELAY}..."
+puts
+
+seen = {}
+while true
+  BOARDS.each do |board|
+    url = "http://boards.4chan.org/#{board}/"
+    doc = Nokogiri::HTML(open(url))
+    doc.css("blockquote").each do |blockquote|
+      if REGEX =~ blockquote.text
+        span = blockquote
+        span = span.previous_sibling while (span.name != "span" or span['class'] == "filesize")
+
+        full_url = url + span.children[0]['href']
+        unless seen[full_url]
+          seen[full_url] = true
+          puts "*** #{full_url}\x07"
+          puts "#{blockquote.text}"
+          puts
+        end
+      end
+    end
+  end
+  sleep DELAY
+end
