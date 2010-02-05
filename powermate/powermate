@@ -1,0 +1,71 @@
+#!/bin/sh
+
+daemonName=""
+possibleDriverNames="PowerMateDriver PowerMateDaemon"
+for name in $possibleDriverNames; do
+    if ps aux | grep "$name" | grep -v "grep" > /dev/null; then
+        daemonName="$name"
+        break
+    fi
+done
+
+if [ -z "$daemonName" ]; then
+    echo "PowerMate driver not running (possible names: $possibleDriverNames)" > /dev/stderr
+    exit 1
+fi
+
+scalePulse="20"
+scaleBrightness="255"
+if [ "$daemonName" = "PowerMateDaemon" ]; then
+    scalePulse="24"
+    scaleBrightness="128"
+fi
+
+showMenu() {
+    cat <<-'EOT'
+-----------------
+PowerMate Control
+-----------------
+
+pulse x = Pulse at x rate, from 0-100.
+on x    = Device stays on with brightness x, from 0-100.
+
+These two settings are mutually exclusive.
+EOT
+    exit 1
+}
+
+if [ $# = 0 ]; then
+    showMenu;
+fi
+
+cmd=$1
+value=$2
+
+echo "$cmd : $value"
+if [ "$cmd" = "pulse" ]; then
+    num=`echo "scale=0; ($value * $scalePulse) / 100" | bc`
+    osascript \
+        -e "tell application \"$daemonName\"" \
+        -e "    set pulse always to true" \
+        -e "    set pulse rate to $num" \
+        -e "end tell"
+fi
+
+if [ "$cmd" = "on" ]; then
+    num=`echo "scale=0; ($value * $scaleBrightness) / 100" | bc`
+    osascript \
+        -e "tell application \"$daemonName\"" \
+        -e "    set pulse always to false" \
+        -e "    set brightness to $num" \
+        -e "end tell"
+fi
+
+if [ "$cmd" = "off" ]; then
+    num="0"
+    osascript \
+        -e "tell application \"$daemonName\"" \
+        -e "    set pulse always to false" \
+        -e "    set brightness to $num" \
+        -e "end tell"
+fi

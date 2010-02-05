@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+PULSE_THRESHOLD = 2.0
+PULSE_LIMIT = 6.0
+
+PULSE_MIN = 30.0
+PULSE_MAX = 100.0
+
+POWERMATE = File.join(File.dirname(__FILE__), 'powermate')
+
+while true do
+  load = (`uptime`).split(' ')[-3].to_f
+
+  if load > PULSE_THRESHOLD then
+    rate = ((load - PULSE_THRESHOLD) / (PULSE_LIMIT - PULSE_THRESHOLD)) * (PULSE_MAX - PULSE_MIN) + PULSE_MIN
+    `#{POWERMATE} pulse #{rate}`
+  else
+    brightness = (load * 100.0) / 2.0
+    `#{POWERMATE} on #{brightness}`
+  end
+  
+  sleep 10
+end
